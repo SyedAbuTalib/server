@@ -1,0 +1,28 @@
+# Secrets
+.env
+
+# Data / Media
+data/
+
+# Application State / Configuration Volumes
+# These directories contain databases, logs, and config files with auto-generated API keys.
+# We do not want to commit these to a public repo.
+docker/flaresolverr/
+docker/gluetun/
+docker/jellyfin/
+docker/jellyseerr/
+docker/prowlarr/
+docker/qbittorrent/
+docker/radarr/
+docker/sonarr/
+docker/unpackerr/
+docker/recommendarr/
+
+# Binaries
+regctl
+
+# Generic Temporary Files
+.DS_Store
+Thumbs.db
+*.log
+*.pid

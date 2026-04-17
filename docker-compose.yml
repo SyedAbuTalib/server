@@ -1,0 +1,186 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8080:8080
+      - 9696:9696
+      - 8191:8191
+    volumes:
+      - ./docker/gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - VPN_PORT_FORWARDING=on
+      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
+      - VPN_PORT_FORWARDING_UPNP=off
+      - WIREGUARD_MTU=1300
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/16,172.16.0.0/12,172.17.0.0/16,172.18.0.0/16
+      - HTTP_CONTROL_SERVER_ADDRESS=:8001
+    restart: always
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:libtorrentv1
+    container_name: qbittorrent
+    network_mode: service:gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - WEBUI_PORT=8080
+    volumes:
+      - ./docker/qbittorrent:/config
+      - /mnt/storage/data:/data
+    restart: always
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/prowlarr:/config
+    restart: always
+
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    network_mode: service:gluetun
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TIMEZONE}
+    restart: always
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    ports:
+      - 7878:7878
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/radarr:/config
+      - /mnt/storage/data:/data
+    restart: always
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    ports:
+      - 8989:8989
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/sonarr:/config
+      - /mnt/storage/data:/data
+    restart: always
+
+  jellyseerr:
+    image: ghcr.io/seerr-team/seerr:latest 
+    init: true
+    container_name: jellyseerr
+    ports:
+      - 5055:5055
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/jellyseerr:/app/config
+    restart: always
+
+  recommendarr:
+    image: tannermiddleton/recommendarr:latest
+    container_name: recommendarr
+    ports:
+      - 3001:3000 # Changed host port to 3001 as 3000 is taken by Glance
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/recommendarr:/app/server/data
+    restart: always
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    ports:
+      - 8096:8096
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/jellyfin:/config
+      - /mnt/storage/data/media:/data/media
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: always
+
+  unpackerr:
+    image: golift/unpackerr
+    container_name: unpackerr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+    volumes:
+      - /mnt/storage/data/torrents:/data/torrents
+    restart: always
+
+  glance:
+    image: glanceapp/glance
+    dns:
+      - 100.100.100.100
+      - 1.1.1.1
+    container_name: glance
+    restart: always
+    ports:
+      - 3000:8080
+    volumes:
+      - ./docker/glance/config:/app/config
+      - /mnt/storage:/mnt/storage:ro
+    pid: host
+    environment:
+      - TZ=${TIMEZONE}
+      - TAILSCALE_API_KEY=${TAILSCALE_API_KEY}
+      - SERVER_HOSTNAME=${SERVER_HOSTNAME}
+      - SERVER_URL=${SERVER_URL}
+      - WEATHER_LOCATION=${WEATHER_LOCATION}
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKER_API_VERSION=1.44
+      - WATCHTOWER_MONITOR_ONLY=true
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_NOTIFICATIONS=shoutrrr
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=info
+      - WATCHTOWER_NOTIFICATION_URL=discord://${WATCHTOWER_TOKEN}@${WATCHTOWER_WEBHOOKID}?splitlines=no
+      - WATCHTOWER_POLL_INTERVAL=86400 # Checks once every 24 hours
+    restart: always

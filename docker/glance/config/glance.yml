@@ -1,0 +1,6 @@
+theme:
+  $include: theme.yml
+
+pages:
+  - $include: home.yml
+  # - $include: server.yml

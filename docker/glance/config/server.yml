@@ -1,0 +1,29 @@
+  - name: Server
+    columns:
+      - size: full
+        widgets:
+          - type: search
+            autofocus: true
+    
+          - type: monitor
+            cache: 1m
+            title: Services
+            sites:
+              - title: Jellyfin
+                url: ${SERVER_URL}:8096
+                icon: si:jellyfin
+              - title: Jellyseerr
+                url: ${SERVER_URL}:5055
+                icon: si:jellyseerr
+              - title: Radarr
+                url: ${SERVER_URL}:7878
+                icon: si:radarr
+              - title: Sonarr
+                url: ${SERVER_URL}:8989
+                icon: si:sonarr
+              - title: qBittorrent
+                url: ${SERVER_URL}:8080
+                icon: si:qbittorrent
+              - title: Prowlarr
+                url: ${SERVER_URL}:9696
+                icon: si:prowlarr
