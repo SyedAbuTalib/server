@@ -2,7 +2,7 @@
     # =======================
     # HOME PAGE
     # =======================
-  - name: Home
+  - name: Glance Dashboard
     
     #  https://github.com/glanceapp/glance/blob/main/docs/configuration.md#pages--columns
     head-widgets: 
