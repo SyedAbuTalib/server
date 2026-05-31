@@ -90,6 +90,33 @@ services:
       - /mnt/storage/data:/data
     restart: always
 
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    ports:
+      - 6767:6767
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/bazarr:/config
+      - /mnt/storage/data:/data
+    restart: always
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    user: "${PUID}:${PGID}"
+    volumes:
+      - ./docker/recyclarr:/config
+    environment:
+      - TZ=${TIMEZONE}
+      - CRON_SCHEDULE=@daily
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+    restart: always
+
   jellyseerr:
     image: ghcr.io/seerr-team/seerr:latest 
     init: true
@@ -115,6 +142,35 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ./docker/recommendarr:/app/server/data
+    restart: always
+
+  jellystat-db:
+    image: postgres:16
+    container_name: jellystat-db
+    environment:
+      - POSTGRES_USER=${JELLYSTAT_DB_USER}
+      - POSTGRES_PASSWORD=${JELLYSTAT_DB_PASSWORD}
+      - POSTGRES_DB=jfstat
+    volumes:
+      - ./docker/jellystat-db:/var/lib/postgresql/data
+    restart: always
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    ports:
+      - 3002:3000
+    environment:
+      - POSTGRES_USER=${JELLYSTAT_DB_USER}
+      - POSTGRES_PASSWORD=${JELLYSTAT_DB_PASSWORD}
+      - POSTGRES_IP=jellystat-db
+      - POSTGRES_PORT=5432
+      - JWT_SECRET=${JELLYSTAT_JWT_SECRET}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./docker/jellystat:/app/backend/backup-data
+    depends_on:
+      - jellystat-db
     restart: always
 
   jellyfin:

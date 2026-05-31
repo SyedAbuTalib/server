@@ -271,6 +271,9 @@
               - title: Sonarr
                 url: ${SERVER_URL}:8989
                 icon: si:sonarr
+              - title: Bazarr
+                url: ${SERVER_URL}:6767
+                icon: sh:bazarr
               - title: qBittorrent
                 url: ${SERVER_URL}:8080
                 icon: si:qbittorrent
@@ -280,6 +283,9 @@
               - title: Recommendarr
                 url: ${SERVER_URL}:3001
                 icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/recomendarr.png
+              - title: Jellystat
+                url: ${SERVER_URL}:3002
+                icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/jellystat.png
 
           - type: monitor
             cache: 1m

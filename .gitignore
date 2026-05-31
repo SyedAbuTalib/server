@@ -25,6 +25,10 @@ docker/prowlarr/
 docker/qbittorrent/
 docker/radarr/
 docker/sonarr/
+docker/bazarr/
+docker/recyclarr/
+docker/jellystat/
+docker/jellystat-db/
 docker/unpackerr/
 docker/recommendarr/
 
