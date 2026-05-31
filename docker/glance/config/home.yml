@@ -280,9 +280,17 @@
               - title: Recommendarr
                 url: ${SERVER_URL}:3001
                 icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/recomendarr.png
-              - title: Folding@Home
-                url: https://v8-5.foldingathome.org/machines
-                icon: https://upload.wikimedia.org/wikipedia/commons/8/83/FAH_Logo.svg
+
+          - type: monitor
+            cache: 1m
+            title: Public Access
+            sites:
+              - title: ${PUBLIC_DOMAIN}
+                url: https://${PUBLIC_DOMAIN}
+                icon: si:jellyfin
+              - title: request.${PUBLIC_DOMAIN}
+                url: https://request.${PUBLIC_DOMAIN}
+                icon: sh:jellyseerr
 
           - type: videos
             channels:

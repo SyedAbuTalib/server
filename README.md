@@ -43,6 +43,7 @@ You'll need the following before starting:
 - **Storage space** for your media (an external/internal hard drive works)
 - **[Optional] An NVIDIA GPU** for hardware-accelerated video transcoding
 - **[Optional] A [Tailscale](https://tailscale.com) account** to access your server remotely from anywhere (phone, laptop, etc.) without exposing it to the internet
+- **[Optional] A domain + cheap VPS** for public access (e.g., for family members who shouldn't have to install Tailscale). See [Public Access](#public-access-optional) below.
 
 ### Getting Your ProtonVPN WireGuard Key
 
@@ -210,6 +211,70 @@ docker compose up -d unpackerr
 3. Click **Request**
 4. Watch it flow: Jellyseerr > Radarr > qBittorrent > Jellyfin
 5. Once downloaded, it should appear in Jellyfin within a few minutes
+
+## Public Access (Optional)
+
+By default the stack is reachable only on your LAN (or via Tailscale). If you want non-technical users — say, family — to use Jellyfin and Jellyseerr by just typing a URL, the setup is:
+
+```
+Internet ──> your domain ──> small VPS (Caddy reverse proxy) ──> WireGuard tunnel ──> your home server
+```
+
+The VPS only terminates TLS and forwards bytes — your home machine still does all the decoding/transcoding. Your home IP is never exposed.
+
+### Why not Tailscale Funnel or Cloudflare Tunnel?
+
+- **Tailscale Funnel**: not designed for high-bandwidth video — would throttle multiple concurrent streams.
+- **Cloudflare Tunnel**: free tier TOS discourages video streaming through their proxy.
+- **VPS + WireGuard + Caddy**: no bandwidth caps beyond what you pay for, full control. A $5/mo Hetzner CPX11 with 20 TB/month included egress handles several concurrent 4K streams comfortably.
+
+### What you need
+
+- A domain (e.g. [Porkbun](https://porkbun.com), [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/) — ~$10/yr)
+- A small VPS (Hetzner CPX11 or any cheap Linux box with public IP)
+- Open UDP `51820` outbound on your home network (most routers do by default)
+
+### Setup
+
+1. **Point DNS** at your VPS. At your registrar add two A records — `@` (apex) and `request` — both pointing to your VPS's public IP.
+
+2. **Generate the home WireGuard key** (on your home server):
+
+   ```bash
+   sudo ./scripts/setup-home-wg.sh
+   ```
+
+   It prints a public key — copy it.
+
+3. **Bootstrap the VPS** (on a fresh Ubuntu VPS, SSH in as root):
+
+   ```bash
+   scp scripts/setup-vps.sh root@<vps-ip>:/root/
+   ssh root@<vps-ip>
+   sudo HOME_WG_PUBKEY="<key-from-step-2>" DOMAIN="yourdomain.com" /root/setup-vps.sh
+   ```
+
+   At the end it prints the VPS public key and IP.
+
+4. **Finish the home side** (on your home server):
+
+   ```bash
+   sudo VPS_IP="<vps-ip>" VPS_WG_PUBKEY="<key-from-step-3>" ./scripts/setup-home-wg.sh
+   ```
+
+5. **Test**: `https://yourdomain.com` should load Jellyfin, `https://request.yourdomain.com` should load Jellyseerr. Let's Encrypt certs are issued automatically.
+
+6. **(Recommended) Jellyfin reverse-proxy setting**: in Jellyfin → **Dashboard → Networking → Known proxies**, add `10.10.10.1` so user activity logs show real client IPs instead of the tunnel.
+
+### Backups
+
+Keep a copy of `/etc/wireguard/` (both ends) and `/etc/caddy/Caddyfile` (VPS) somewhere safe — restoring takes 5 minutes with them, much longer without:
+
+```bash
+sudo tar czf ~/server-backups/home-wg-$(date +%Y%m%d).tar.gz /etc/wireguard
+ssh root@<vps-ip> 'tar czf - /etc/wireguard /etc/caddy/Caddyfile' \
+    > ~/server-backups/vps-$(date +%Y%m%d).tar.gz
+```
 
 ## Day-to-Day Usage
 

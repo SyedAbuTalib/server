@@ -1,6 +1,16 @@
 # Secrets
 .env
 
+# Per-user dev tooling
+.claude/
+
+# WireGuard material (never commit, even by accident)
+*.key
+wg0.conf
+
+# Local backup archives
+server-backups/
+
 # Data / Media
 data/
 
