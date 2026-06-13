@@ -280,12 +280,12 @@
               - title: Prowlarr
                 url: ${SERVER_URL}:9696
                 icon: sh:prowlarr
-              - title: Recommendarr
-                url: ${SERVER_URL}:3001
-                icon: https://api.iconify.design/lucide:wand-sparkles.svg?color=white
               - title: Jellystat
                 url: ${SERVER_URL}:3002
                 icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/jellystat.png
+              - title: Dejarr
+                url: ${SERVER_URL}:3003
+                icon: https://api.iconify.design/lucide:sparkles.svg?color=white
 
           - type: monitor
             cache: 1m

@@ -131,19 +131,6 @@ services:
       - ./docker/jellyseerr:/app/config
     restart: always
 
-  recommendarr:
-    image: tannermiddleton/recommendarr:latest
-    container_name: recommendarr
-    ports:
-      - 3001:3000 # Changed host port to 3001 as 3000 is taken by Glance
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./docker/recommendarr:/app/server/data
-    restart: always
-
   jellystat-db:
     image: postgres:16
     container_name: jellystat-db
@@ -205,8 +192,36 @@ services:
       - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
       - UN_RADARR_0_URL=http://radarr:7878
       - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+      - UN_WEBHOOK_0_URL=https://discord.com/api/webhooks/${DISCORD_WEBHOOK_ID}/${DISCORD_TOKEN}
+      - UN_WEBHOOK_0_NAME=Unpackerr
+      # Event codes: 3 = extract finished, 7 = extract deleted
+      - UN_WEBHOOK_0_EVENTS_0=3
+      - UN_WEBHOOK_0_EVENTS_1=7
     volumes:
       - /mnt/storage/data/torrents:/data/torrents
+    restart: always
+
+  dejarr:
+    build: ./docker/dejarr
+    container_name: dejarr
+    ports:
+      - 3003:8000
+    environment:
+      - TZ=${TIMEZONE}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID}
+      - TRAKT_CLIENT_SECRET=${TRAKT_CLIENT_SECRET}
+      - TRAKT_REFRESH_TOKEN=${TRAKT_REFRESH_TOKEN}
+      - JELLYSEERR_API_KEY=${JELLYSEERR_API_KEY}
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/${DISCORD_WEBHOOK_ID}/${DISCORD_TOKEN}
+    volumes:
+      - ./docker/dejarr/state:/state
+    depends_on:
+      - sonarr
+      - radarr
+      - jellyseerr
     restart: always
 
   glance:
@@ -242,6 +257,7 @@ services:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_NOTIFICATIONS=shoutrrr
       - WATCHTOWER_NOTIFICATIONS_LEVEL=info
-      - WATCHTOWER_NOTIFICATION_URL=discord://${WATCHTOWER_TOKEN}@${WATCHTOWER_WEBHOOKID}?splitlines=no
+      - WATCHTOWER_NOTIFICATION_URL=discord://${DISCORD_TOKEN}@${DISCORD_WEBHOOK_ID}?splitlines=no
+      - WATCHTOWER_NO_STARTUP_MESSAGE=true
       - WATCHTOWER_POLL_INTERVAL=604800 # Checks once every 7 days
     restart: always

@@ -30,7 +30,7 @@ docker/recyclarr/
 docker/jellystat/
 docker/jellystat-db/
 docker/unpackerr/
-docker/recommendarr/
+docker/dejarr/state/
 
 # Binaries
 regctl

@@ -27,3 +27,6 @@
               - title: Prowlarr
                 url: ${SERVER_URL}:9696
                 icon: si:prowlarr
+              - title: Dejarr
+                url: ${SERVER_URL}:3003
+                icon: https://api.iconify.design/lucide:sparkles.svg?color=white
