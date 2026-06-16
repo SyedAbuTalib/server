@@ -90,9 +90,17 @@ def trakt_get(path, token):
     return json.loads(http(f"https://api.trakt.tv{path}", trakt_headers(token)))
 
 
+def _norm_title(s):
+    """Lowercase, drop non-alphanumerics (keep spaces), collapse whitespace.
+    'Parasyte: The Maxim' and 'Parasyte -the maxim-' both → 'parasyte the maxim'."""
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", s.lower())).strip()
+
+
 def trakt_mark_watched(token, kind, title, year=None):
     """kind: 'show' or 'movie'. Searches title-only, picks the best match, POSTs to /sync/history."""
-    q = urllib.parse.quote(title)
+    # Sanitize query: Trakt search treats leading '-' as exclusion, so strip punctuation
+    # before sending. Normalized comparison below handles the matching.
+    q = urllib.parse.quote(_norm_title(title))
     search_type = "show" if kind == "show" else "movie"
     path = f"/search/{search_type}?query={q}&fields=title&limit=10"
     if year:
@@ -100,7 +108,7 @@ def trakt_mark_watched(token, kind, title, year=None):
     results = trakt_get(path, token)
     if not results:
         return False, f"no trakt match for '{title}'"
-    title_norm = title.lower().strip()
+    title_norm = _norm_title(title)
     try:
         year_int = int(year) if year else None
     except (ValueError, TypeError):
@@ -108,7 +116,7 @@ def trakt_mark_watched(token, kind, title, year=None):
     hit = None
     for r in results:
         item = r.get(search_type, {})
-        if item.get("title", "").lower().strip() == title_norm:
+        if _norm_title(item.get("title", "")) == title_norm:
             if year_int and item.get("year") == year_int:
                 hit = item
                 break

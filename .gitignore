@@ -26,7 +26,9 @@ docker/qbittorrent/
 docker/radarr/
 docker/sonarr/
 docker/bazarr/
-docker/recyclarr/
+docker/recyclarr/*
+!docker/recyclarr/recyclarr.yml
+!docker/recyclarr/settings.yml
 docker/jellystat/
 docker/jellystat-db/
 docker/unpackerr/
